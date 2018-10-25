@@ -1,0 +1,7 @@
+<launch>
+	<include file="$(find sick_tim)/launch/sick_mrs1000.launch"/>
+	
+	<node pkg="tf" type="static_transform_publisher" name="laser_to_map" args="0 0 0 0 0 0 1 /map /laser 100"/>
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar)/rviz/lidar_visualization.rviz"/>
+</launch>
