@@ -33,7 +33,7 @@ class ExtendedKalmanFilter:
 		# Returns Predicted State and Predicted Covariance
 
 		G3 = ekf_prediction.dg_dstate(self.state, control, self.robot_width)
-		control_variance = ekf_prediction.sigma_control(control)
+		control_variance = ekf_prediction.sigma_control(control, self.control_motion_factor, self.control_turn_factor)
 		V = ekf_prediction.dg_dcontrol(self.state, control, self.robot_width)
 		R3 = dot(V, dot(control_variance, V.T))
 
@@ -51,29 +51,38 @@ class ExtendedKalmanFilter:
 		# Updates State and Covariances for each new landmark
 
 		self.number_of_landmarks += 1
-		self.landmark_index += 1
 
 		i = self.landmark_index
 
 		updated_state = zeros(3+2*self.number_of_landmarks)
-		updated_state[0:3] = self.state
+		updated_state[0:3] = self.state[0:3]
 		updated_state[2*i+3:2*i+5] = landmark_coords
 
 		updated_covariance = eye(3+2*self.number_of_landmarks)
-		updated_covariance[0:3] = self.covariance
-		updated_covariance[2*i+3:2*i+5, 2*i+3:2*i+5] = diag([10**10, 10**10])
+		updated_covariance[0:3, 0:3] = self.covariance[0:3, 0:3]
+		updated_covariance[3+(2*i):5+(2*i),3+(2*i):5+(2*i)] = diag([10**10, 10**10])
 
-		return updated_state, updated_covariance
+		self.state = updated_state
+		self.covariance = updated_covariance
+
+		self.landmark_index += 1
+
+		return self.landmark_index - 1
 
 
 	def correct(self, measurement, landmark_index):
 		# Testing
 		# Returns Corrected State and Corrected Covariance
 
-		landmark = self.state[3+landmark_index:3+landmark_index + 2]
+		landmark = self.state[3+2*landmark_index:3+2*landmark_index + 2]
+
 		H3 = ekf_correction.dh_dstate(self.state, landmark, self.scanner_displacement)
 
-		H = H3 # Change later to include new terms
+		H_landmarks = zeros([2, 3+2*self.number_of_landmarks])
+		H_landmarks[0:2, 0:3] = H3
+		H_landmarks[0:2, 3+2*landmark_index:5+2*landmark_index] = -1 * H3[0:2, 0:2]
+
+		H = H_landmarks
 
 		Q = diag([self.measurement_distance_stddev**2, self.measurement_angle_stddev**2]) 
 		K = dot(dot(self.covariance, H.T), linalg.inv(dot(H, dot(self.covariance, H.T)) + Q))
@@ -131,10 +140,12 @@ if __name__ == '__main__':
 
 		while not rospy.is_shutdown():
 			# Subscribe to encoder ticks here and initialize control array
-			ekf.predict(control)
+			#ekf.predict(control)
+			ekf.predict([10,11])
 
 			# Subscribe to observations here
-			for obs in range(len(observations)):
+			observations = [[1,2,3,-1],[2,4,5,-1]]
+			for obs in observations:
 				measurement, cylinder_world, cylinder_scanner, cylinder_index = obs
 				if cylinder_index == -1:
 					cylinder_index = ekf.add_landmark(cylinder_world)

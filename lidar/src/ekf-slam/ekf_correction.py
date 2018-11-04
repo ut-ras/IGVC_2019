@@ -20,14 +20,14 @@ def h(state, landmark, scanner_displacement):
 	y_l = y + scanner_displacement * sin(theta)
 
 	x_m = landmark[0]
-	x_y = landmark[1]
+	y_m = landmark[1]
 
 	dx = x_m - x_l
 	dy = y_m - y_l
 	q = (dx)**2 + (dy)**2
 
 	r = sqrt(q)
-	alpha = (atan2(dy/dx) - theta + pi) % (2 * pi) - pi
+	alpha = (atan2(dy, dx) - theta + pi) % (2 * pi) - pi
 
 	return array([r, alpha])
 
@@ -41,7 +41,7 @@ def dh_dstate(state, landmark, scanner_displacement):
 	y_l = y + scanner_displacement * sin(theta)
 
 	x_m = landmark[0]
-	x_y = landmark[1]
+	y_m = landmark[1]
 
 	dx = x_m - x_l
 	dy = y_m - y_l
@@ -49,13 +49,13 @@ def dh_dstate(state, landmark, scanner_displacement):
 
 	dr_dx = -(dx / sqrt(q))
 	dr_dy = -(dy / sqrt(q))
-	dr_dtheta = (d / sqrt(q)) * (dx*sin(theta) - dy*cos(theta))
+	dr_dtheta = (scanner_displacement / sqrt(q)) * (dx*sin(theta) - dy*cos(theta))
 	dalpha_dx = dy / q
 	dalpha_dy = -dx / q
-	dalpha_dtheta = -(d / q) * (dx*cos(theta) + dy*sin(theta)) - 1.0
+	dalpha_dtheta = -(scanner_displacement / q) * (dx*cos(theta) + dy*sin(theta)) - 1.0
 
-	return array([dr_dx, dr_dy, dr_dtheta],
-				 [dalpha_dx, dalpha_dy, dalpha_dtheta])
+	return array([[dr_dx, dr_dy, dr_dtheta],
+				 [dalpha_dx, dalpha_dy, dalpha_dtheta]])
 
 if __name__ == '__main__':
 	try:

@@ -12,11 +12,11 @@ from numpy import *
 
 # State function
 def g(state, control, width):
-	x, y, theta = state
+	x, y, theta = state[0:3]
 	l, r = control
 
 	if r != l:
-		alpha = (r - l) / w
+		alpha = (r - l) / width
 		radius = l / alpha
 
 		g1 = x + (radius + width / 2) * (sin(theta + alpha) - sin(theta))
@@ -35,17 +35,17 @@ def dg_dstate(state, control, width):
 	l, r = control
 
 	if r != l:
-		alpha = (r - l) / w
+		alpha = (r - l) / width
 		theta_prime = theta + alpha
 
-		m = array([1.0, 0.0, ((l / alpha) + width / 2.0) * (cos(theta_prime) - cos(theta))],
+		m = array([[1.0, 0.0, ((l / alpha) + width / 2.0) * (cos(theta_prime) - cos(theta))],
 				  [0.0, 0.0, ((l / alpha) + width / 2.0) * (sin(theta_prime) - sin(theta))],
-				  [0.0, 0.0, 1.0])
+				  [0.0, 0.0, 1.0]])
 
 	else:
-		m = array([1.0, 0.0, -(l * sin(theta))],
+		m = array([[1.0, 0.0, -(l * sin(theta))],
 				  [0.0, 1.0, (l * cos(theta))],
-				  [0.0, 0.0, 1.0])
+				  [0.0, 0.0, 1.0]])
 
 	return m
 
@@ -56,7 +56,7 @@ def dg_dcontrol(state, control, width):
 
 	if r != l:
 		rml = r - l
-		rml2 = rm1 * rm1
+		rml2 = rml * rml
 
 		alpha = rml / width
 		theta_prime = theta + alpha 
@@ -82,17 +82,17 @@ def dg_dcontrol(state, control, width):
 	dg3_dl = -(1.0 / width)
 	dg3_dr = (1.0 / width)
 
-	return array([[dg1_dl, dg1_dr], [dg2_dl, dg2_dr], [dg3_dl], dg3_dr])
+	return array([[dg1_dl, dg1_dr], [dg2_dl, dg2_dr], [dg3_dl, dg3_dr]])
 
 # Returns Control Covariance Matrix
-def sigma_control(control):
+def sigma_control(control, control_motion_factor, control_turn_factor):
 	l, r = control
 
 	left_control_variance = (control_motion_factor * l)**2 + (control_turn_factor * (l-r))**2
 	right_control_variance = (control_motion_factor * r)**2 + (control_turn_factor * (l-r))**2
 
-	return array([left_control_variance, 0.0],
-				 [0.0, right_control_variance])
+	return array([[left_control_variance, 0.0],
+				 [0.0, right_control_variance]])
 
 if __name__ == '__main__':
 	try:
