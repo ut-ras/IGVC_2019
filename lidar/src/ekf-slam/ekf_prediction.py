@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+'''
+This module contains a list of helper prediction functions
+for the Extended Kalman Filter 
+in the case of a differential wheeled robot
+'''
+
 import rospy
 from math import sin, cos, pi, atan2, sqrt
 from numpy import *
@@ -78,13 +84,15 @@ def dg_dcontrol(state, control, width):
 
 	return array([[dg1_dl, dg1_dr], [dg2_dl, dg2_dr], [dg3_dl], dg3_dr])
 
-# Prediction Step of EKF
-def predict(self, control):
+# Returns Control Covariance Matrix
+def sigma_control(control):
 	l, r = control
-	state = g(self.state, control, width)
 
-	# Testing
-	# Return predicted state and predicted covariance
+	left_control_variance = (control_motion_factor * l)**2 + (control_turn_factor * (l-r))**2
+	right_control_variance = (control_motion_factor * r)**2 + (control_turn_factor * (l-r))**2
+
+	return array([left_control_variance, 0.0],
+				 [0.0, right_control_variance])
 
 if __name__ == '__main__':
 	try:

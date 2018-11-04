@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+'''
+This module extracts landmark positions from
+the laser scan topic and publishes landmark
+positions in global X-Y coordinates
+'''
+
 import rospy
 from sensor_msgs.msg import LaserScan
 
