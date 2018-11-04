@@ -33,6 +33,14 @@ def listener():
 
 if __name__ == '__main__':
 	try:
+		print "Landmark Extraction is Alive!"
+		# Cylinder Extraction and matching constants
+		minimum_valid_distance = rospy.get_param("/landmark_extraction/minimum_valid_distance")
+		depth_jump = rospy.get_param("/landmark_extraction/depth_jump")
+		cylinder_offset = rospy.get_param("/landmark_extraction/cylinder_offset")
+		max_cylinder_distance = rospy.get_param("/landmark_extraction/max_cylinder_distance")
+
 		listener()
+
 	except rospy.ROSInterruptException:
 		pass

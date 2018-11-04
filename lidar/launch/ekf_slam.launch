@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="landmark_extraction" pkg="lidar" type="landmark_extraction.py" output="screen">
+  	<param name="minimum_valid_distance" value="10"/>
+  	<param name="depth_jump" value="10"/>
+  	<param name="cylinder_offset" value="10"/>
+  	<param name="max_cylinder_distance" value="10"/>
+  </node>
+
+  <node name="ekf" pkg="lidar" type="ekf_main.py" output="screen">
+    <param name="ticks_to_mm" value="10"/>
+  	<param name="robot_width" value="10"/>
+  	<param name="scanner_displacement" value="10"/>
+  	<param name="control_motion_factor" value="10"/>
+  	<param name="control_turn_factor" value="10"/>
+  	<param name="measurement_distance_stddev" value="10"/>
+  	<param name="measurement_angle_stddev" value="10"/>
+  	<param name="x0" value="$10"/>
+  	<param name="y0" value="$10"/>
+  	<param name="theta0" value="10"/>
+  </node>
+
+</launch>
