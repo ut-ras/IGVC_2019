@@ -19,9 +19,9 @@ def g(state, control, width):
 		alpha = (r - l) / width
 		radius = l / alpha
 
-		g1 = x + (radius + width / 2) * (sin(theta + alpha) - sin(theta))
-		g2 = y + (radius + width / 2) * (-cos(theta + alpha) + cos(theta))
-		g3 = (theta + alpha + pi) % (2 * pi) - pi
+		g1 = x + (radius + width / 2.0) * (sin(theta + alpha) - sin(theta))
+		g2 = y + (radius + width / 2.0) * (-cos(theta + alpha) + cos(theta))
+		g3 = (theta + alpha + pi) % (2.0 * pi) - pi
 	else:
 		g1 = x + (l * cos(theta))
 		g2 = y + (l * sin(theta))
@@ -39,7 +39,7 @@ def dg_dstate(state, control, width):
 		theta_prime = theta + alpha
 
 		m = array([[1.0, 0.0, ((l / alpha) + width / 2.0) * (cos(theta_prime) - cos(theta))],
-				  [0.0, 0.0, ((l / alpha) + width / 2.0) * (sin(theta_prime) - sin(theta))],
+				  [0.0, 1.0, ((l / alpha) + width / 2.0) * (sin(theta_prime) - sin(theta))],
 				  [0.0, 0.0, 1.0]])
 
 	else:

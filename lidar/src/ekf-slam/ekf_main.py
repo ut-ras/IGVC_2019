@@ -26,7 +26,10 @@ class ExtendedKalmanFilter:
 		self.measurement_angle_stddev = measurement_angle_stddev
 
 		self.number_of_landmarks = 0
-		self.landmark_index = 0
+		self.landmark_index = -1
+		self.loop_once = False
+
+		self.DEBUG = False
 
 	def predict(self, control):
 		# Testing
@@ -43,20 +46,34 @@ class ExtendedKalmanFilter:
 		R_landmarks = zeros([3+2*self.number_of_landmarks, 3+2*self.number_of_landmarks])
 		R_landmarks[0:3,0:3] = R3
 
-		self.state = ekf_prediction.g(self.state, control, self.robot_width) # Replace later
+		g3 = ekf_prediction.g(self.state, control, self.robot_width)
+		
+		g_landmarks = zeros(3+2*self.number_of_landmarks)
+		g_landmarks[0:3] = g3
+
+		self.state = g_landmarks
 		self.covariance = dot(G_landmarks, dot(self.covariance, G_landmarks.T)) + R_landmarks
+
+		if self.DEBUG: 
+			print ""
+			print "Predicted State: ", self.state 
+			print "State Dimensions: ", self.state.shape
+			print "Predicted Covariance: ", self.covariance
+			print "Covariance Dimensions: ", self.covariance.shape
+			print ""
 
 	def add_landmark(self, landmark_coords):
 		# Testing
 		# Updates State and Covariances for each new landmark
 
 		self.number_of_landmarks += 1
+		self.landmark_index += 1
 
 		i = self.landmark_index
 
-		updated_state = zeros(3+2*self.number_of_landmarks)
+		updated_state = zeros([3+2*self.number_of_landmarks])
 		updated_state[0:3] = self.state[0:3]
-		updated_state[2*i+3:2*i+5] = landmark_coords
+		updated_state[2*i+3:3+2*i+5] = landmark_coords
 
 		updated_covariance = eye(3+2*self.number_of_landmarks)
 		updated_covariance[0:3, 0:3] = self.covariance[0:3, 0:3]
@@ -65,9 +82,14 @@ class ExtendedKalmanFilter:
 		self.state = updated_state
 		self.covariance = updated_covariance
 
-		self.landmark_index += 1
+		if self.DEBUG:
+			print ""
+			print "Updated State with Landmark: ", self.state
+			print ""
+			print "Updated Covariance with landmark: ", self.covariance
+			print ""
 
-		return self.landmark_index - 1
+		return self.landmark_index
 
 
 	def correct(self, measurement, landmark_index):
@@ -76,21 +98,25 @@ class ExtendedKalmanFilter:
 
 		landmark = self.state[3+2*landmark_index:3+2*landmark_index + 2]
 
-		H3 = ekf_correction.dh_dstate(self.state, landmark, self.scanner_displacement)
+		if (self.landmark_index == -1):
+			if (self.DEBUG):
+				print "No landmarks detected!"
+		else:
+			H3 = ekf_correction.dh_dstate(self.state, landmark, self.scanner_displacement)
 
-		H_landmarks = zeros([2, 3+2*self.number_of_landmarks])
-		H_landmarks[0:2, 0:3] = H3
-		H_landmarks[0:2, 3+2*landmark_index:5+2*landmark_index] = -1 * H3[0:2, 0:2]
+			H_landmarks = zeros([2, 3+2*self.number_of_landmarks])
+			H_landmarks[0:2, 0:3] = H3
+			H_landmarks[0:2, 3+2*landmark_index:5+2*landmark_index] = -1 * H3[0:2, 0:2]
 
-		H = H_landmarks
+			H = H_landmarks
 
-		Q = diag([self.measurement_distance_stddev**2, self.measurement_angle_stddev**2]) 
-		K = dot(dot(self.covariance, H.T), linalg.inv(dot(H, dot(self.covariance, H.T)) + Q))
+			Q = diag([self.measurement_distance_stddev**2, self.measurement_angle_stddev**2]) 
+			K = dot(dot(self.covariance, H.T), linalg.inv(dot(H, dot(self.covariance, H.T)) + Q))
 
-		innovation = array(measurement) - ekf_correction.h(self.state, landmark, self.scanner_displacement)
-		
-		self.state = self.state + dot(K, innovation)
-		self.covariance = dot(eye(size(self.state)) - dot(K, H), self.covariance)
+			innovation = array(measurement) - ekf_correction.h(self.state, landmark, self.scanner_displacement)
+			
+			self.state = self.state + dot(K, innovation)
+			self.covariance = dot(eye(size(self.state)) - dot(K, H), self.covariance)
 
 	def visualize_landmark_error_ellipse(self):
 		# Helper function to visualize covariance in landmark position
@@ -141,15 +167,21 @@ if __name__ == '__main__':
 		while not rospy.is_shutdown():
 			# Subscribe to encoder ticks here and initialize control array
 			#ekf.predict(control)
-			ekf.predict([10,11])
+			ekf.predict([10.0,12.0])
 
 			# Subscribe to observations here
-			observations = [[1,2,3,-1],[2,4,5,-1]]
+			#observations = [[1,2,3,2],[2,4,5,1]]
+
+			#observations = [[2,3,4,1],[2,3,4,1]]
+			observations = [[1,2,3,-1]]
+
 			for obs in observations:
 				measurement, cylinder_world, cylinder_scanner, cylinder_index = obs
 				if cylinder_index == -1:
 					cylinder_index = ekf.add_landmark(cylinder_world)
 				ekf.correct(measurement, cylinder_index)
+
+			ekf.loop_once = True
 
 			# Publish map and pose to RVIZ here
 

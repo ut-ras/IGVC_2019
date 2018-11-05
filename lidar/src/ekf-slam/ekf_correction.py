@@ -29,6 +29,13 @@ def h(state, landmark, scanner_displacement):
 	r = sqrt(q)
 	alpha = (atan2(dy, dx) - theta + pi) % (2 * pi) - pi
 
+	#rint ""
+	#print "State: ", state
+	#print "Landmark: ", landmark
+	#print "Distance to Measurement: ", r
+	#print "Alpha angle to Measurement: ", alpha
+	#print ""
+
 	return array([r, alpha])
 
 # Jacobian of Measurement Function wrt State
