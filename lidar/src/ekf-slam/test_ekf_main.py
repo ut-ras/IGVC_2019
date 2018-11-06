@@ -11,7 +11,9 @@ class EKF_MainTest(unittest.TestCase):
 	@classmethod
 	def setUpClass(self):
 		self.state = [100.0, 100.0, 0.0]
-		self.covariance = zeros([3,3])
+		self.covariance = array([[1,2,3],
+								 [4,5,6],
+								 [7,8,9]])
 		self.width = 150.0
 		self.scannerDisplacement = 10.0
 		self.control_motion_factor = 0.35

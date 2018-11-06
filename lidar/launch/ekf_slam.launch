@@ -5,7 +5,7 @@
 
   <node name="landmark_extraction" pkg="lidar" type="landmark_extraction.py" output="screen">
   	<param name="minimum_valid_distance" value="10"/>
-  	<param name="depth_jump" value="10"/>
+  	<param name="depth_jump" value="0.1"/>
   	<param name="cylinder_offset" value="10"/>
   	<param name="max_cylinder_distance" value="10"/>
   </node>
