@@ -96,12 +96,12 @@ class ExtendedKalmanFilter:
 		# Testing
 		# Returns Corrected State and Corrected Covariance
 
-		landmark = self.state[3+2*landmark_index:3+2*landmark_index + 2]
-
 		if (self.landmark_index == -1):
 			if (self.DEBUG):
 				print "No landmarks detected!"
 		else:
+			landmark = self.state[3+2*landmark_index:3+2*landmark_index + 2]
+			
 			H3 = ekf_correction.dh_dstate(self.state, landmark, self.scanner_displacement)
 
 			H_landmarks = zeros([2, 3+2*self.number_of_landmarks])

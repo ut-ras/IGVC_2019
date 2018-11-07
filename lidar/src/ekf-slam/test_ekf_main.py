@@ -12,8 +12,8 @@ class EKF_MainTest(unittest.TestCase):
 	def setUpClass(self):
 		self.state = [100.0, 100.0, 0.0]
 		self.covariance = array([[1,2,3],
-								 [4,5,6],
-								 [7,8,9]])
+								 [0,1,0],
+								 [0,0,1]])
 		self.width = 150.0
 		self.scannerDisplacement = 10.0
 		self.control_motion_factor = 0.35
@@ -42,7 +42,9 @@ class EKF_MainTest(unittest.TestCase):
 		ekf = EKF_MainTest.reinitialize_object(self)
 
 		test_state = array([110,100,0.0])
-		test_covariance = array([1,2,3]) # <-- Replace with test case
+		test_covariance = array([[7.125, 32, 3],
+								 [0, 101.027222, 10.0054444],
+								 [0, 10.0054444, 1.00108888]])
 
 		ekf.predict(self.equalControl)
 
@@ -57,7 +59,9 @@ class EKF_MainTest(unittest.TestCase):
 		ekf = EKF_MainTest.reinitialize_object(self)
 
 		test_state = array([112.49768531,100.2083140439,0.033333333])
-		test_covariance = array([1,2,3]) # <-- Replace with test case
+		test_covariance = array([[14.85210103, 37.4469463, 2.842361335],
+								 [-2.04610963, 157.3070951, 12.5145905],
+								 [-0.157638665, 12.5145905, 1.00256944]]) # <-- Replace with test case
 
 		ekf.predict(self.notEqualControl)
 
@@ -72,9 +76,13 @@ class EKF_MainTest(unittest.TestCase):
 	def test_add_landmark(self):
 		ekf = EKF_MainTest.reinitialize_object(self)
 
-		test_state = array([110,100,0.0]) # <-- Replace with test case
-		test_covariance = array([1,2,3]) # <-- Replace with test case
-		test_landmark_index = 0 # <-- Replace with test cas
+		test_state = array([100,100,0.0,200.0,250.0])
+		test_covariance = array([[1,2,3,0,0],
+								 [0,1,0,0,0],
+								 [0,0,1,0,0],
+								 [0,0,0,10**10,0],
+								 [0,0,0,0,10**10]])
+		test_landmark_index = 0
 
 		ekf.add_landmark(self.landmark_coords)
 
@@ -93,9 +101,14 @@ class EKF_MainTest(unittest.TestCase):
 	def test_correct(self):
 		ekf = EKF_MainTest.reinitialize_object(self)
 
-		test_state = array([110,100,0.0]) # <-- Replace with test case
-		test_covariance = array([1,2,3]) # <-- Replace with test case
+		test_state = array([-362.8160586, 99.56289878, -154.22621, 200, 250]) # <-- Replace with test case
+		test_covariance = array([[1,2,3,0,0],
+								 [0,1,0,0,0],
+								 [0,0,1,0,0],
+								 [0,0,0,10**10,0],
+								 [0,0,0,0,10**10]]) # <-- Replace with test case
 
+		ekf.add_landmark(self.landmark_coords)
 		ekf.correct(self.measurement, self.first_landmark)
 
 		self.assertTrue(allclose(ekf.state, test_state),
