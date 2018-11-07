@@ -7,7 +7,7 @@
   	<param name="minimum_valid_distance" value="10"/>
   	<param name="depth_jump" value="0.1"/>
   	<param name="cylinder_offset" value="10"/>
-  	<param name="max_cylinder_distance" value="10"/>
+  	<param name="max_landmark_radius" value="0.5"/>
   </node>
 
   <node name="ekf" pkg="lidar" type="ekf_main.py" output="screen">
