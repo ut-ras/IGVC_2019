@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import rospy
-from math import sin, cos, pi, atan2, sqrt
+from math import sin, cos, pi, atan2, sqrt, radians, degrees
 from numpy import *
+from std_msgs.msg import Float64MultiArray
+from sensor_msgs.msg import LaserScan
 
 import ekf_prediction, ekf_correction
 
@@ -25,11 +27,70 @@ class ExtendedKalmanFilter:
 		self.measurement_distance_stddev = measurement_distance_stddev
 		self.measurement_angle_stddev = measurement_angle_stddev
 
+		self.observations = []
+
 		self.number_of_landmarks = 0
 		self.landmark_index = -1
 		self.loop_once = False
 
 		self.DEBUG = False
+
+	def visualize_landmarks(self, landmarks):
+		num_readings = 1080
+		laser_frequency = 40
+		current_time = rospy.Time.now()
+
+		scan = LaserScan()
+		
+		scan.header.stamp = current_time
+		scan.header.frame_id = 'landmark_frame'
+		scan.angle_min = -2.35619449019
+		scan.angle_max = 2.35619449019
+		scan.angle_increment =  0.0043633231
+		scan.time_increment = 0.000061722
+		scan.scan_time = 1.0
+		scan.range_min = 0.2
+		scan.range_max = 64.0
+
+		scan.ranges = []
+		scan.intensities = []
+
+		bearing = []
+		current_range = []
+
+		bearing_found = False
+
+		for i in range(len(landmarks)):
+			current_range.append(sqrt(landmarks[i][0]**2 + landmarks[i][1]**2))
+			bearing.append(degrees(atan2(landmarks[i][1], landmarks[i][0])))
+			bearing[i] = round((bearing[i] + 135.0) * 4.0)
+
+		for i in range(0, 1080):
+			for j in range(len(bearing)):
+				if i == (bearing[j]):
+					scan.ranges.append(current_range[j])
+					bearing_found = True
+					break
+			if bearing_found:
+				bearing_found = False
+				continue	
+			else:
+				scan.ranges.append(0)
+
+		print len(scan.ranges)
+
+		landmark_pub.publish(scan)
+		#print bearing
+
+	def retrieve_landmarks(self, msg):
+		i = 0
+		self.observations = []
+
+		while i < len(msg.data):
+			self.observations.append(msg.data[i:i+2])
+			i += 2
+
+		#print self.observations[-1]
 
 	def predict(self, control):
 		# Testing
@@ -164,26 +225,36 @@ if __name__ == '__main__':
 								   control_turn_factor, measurement_distance_stddev,
 								   measurement_angle_stddev)
 
+		rospy.init_node('EKF_main', anonymous=True)
+		landmark_pub = rospy.Publisher('scan_landmarks', LaserScan, queue_size=10)
+		scan_pub = rospy.Publisher('test_scan', LaserScan, queue_size=10)
+
+		rate = rospy.Rate(10)
+
 		while not rospy.is_shutdown():
 			# Subscribe to encoder ticks here and initialize control array
 			#ekf.predict(control)
 			ekf.predict([10.0,12.0])
 
 			# Subscribe to observations here
+			rospy.Subscriber("/landmark", Float64MultiArray, ekf.retrieve_landmarks, queue_size = 10)
 			#observations = [[1,2,3,2],[2,4,5,1]]
 
 			#observations = [[2,3,4,1],[2,3,4,1]]
-			observations = [[1,2,3,-1]]
+			#observations = [[1,2,3,-1]]
 
-			for obs in observations:
-				measurement, cylinder_world, cylinder_scanner, cylinder_index = obs
-				if cylinder_index == -1:
-					cylinder_index = ekf.add_landmark(cylinder_world)
-				ekf.correct(measurement, cylinder_index)
+			#for obs in observations:
+			#	measurement, cylinder_world, cylinder_scanner, cylinder_index = obs
+			#	if cylinder_index == -1:
+			#		cylinder_index = ekf.add_landmark(cylinder_world)
+			#	ekf.correct(measurement, cylinder_index)
 
 			ekf.loop_once = True
 
 			# Publish map and pose to RVIZ here
+			ekf.visualize_landmarks(ekf.observations)
+
+			rate.sleep()
 
 	except rospy.ROSInterruptException:
 		pass

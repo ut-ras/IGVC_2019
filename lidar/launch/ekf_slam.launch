@@ -5,7 +5,7 @@
 
   <node name="landmark_extraction" pkg="lidar" type="landmark_extraction.py" output="screen">
   	<param name="minimum_valid_distance" value="10"/>
-  	<param name="depth_jump" value="0.1"/>
+  	<param name="depth_jump" value="0.025"/>
   	<param name="cylinder_offset" value="10"/>
   	<param name="max_landmark_radius" value="0.5"/>
   </node>
@@ -23,4 +23,5 @@
   	<param name="theta0" value="0.0"/>
   </node>
 
+  <node pkg="tf" type="static_transform_publisher" name="landmark_laser_to_map" args="0 0 0 0 0 0 1 /map /landmark_frame 1000"/>
 </launch>

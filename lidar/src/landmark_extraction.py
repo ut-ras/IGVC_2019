@@ -65,7 +65,7 @@ class LandmarkExtraction:
 				#print "right_edge found at {}".format(right_edge)
 				
 				if left_edge_found:
-					landmark_bearing = (right_edge + left_edge) / 2
+					landmark_bearing = (right_edge + left_edge) / 2 # <-- This right here is causing small errors by divid by 2. Will fix later
 					landmark_range = msg.ranges[int((landmark_bearing + 135.0) * 4.0)]
 
 					landmark_x = landmark_range * cos(radians(landmark_bearing))
