@@ -2,6 +2,7 @@
 <launch>
   <node name="Unit_Test_Prediction" pkg="lidar" type="test_ekf_prediction.py" output="screen"/>
   <node name="Unit_Test_Correction" pkg="lidar" type="test_ekf_correction.py" output="screen"/>
+  <!--node name="Unit_Test_EKF_Main" pkg="lidar" type="test_ekf_main.py" output="screen"/-->
 
   <node name="landmark_extraction" pkg="lidar" type="landmark_extraction.py" output="screen">
   	<param name="minimum_valid_distance" value="10"/>
@@ -21,6 +22,14 @@
   	<param name="x0" value="0.0"/>
   	<param name="y0" value="0.0"/>
   	<param name="theta0" value="0.0"/>
+  </node>
+
+  <node name="mapper" pkg="lidar" type="mapper.py" output="screen">
+    <param name="resolution" value="10.0"/>
+    <param name="width" value="100.0"/>
+    <param name="height" value="100.0"/>
+    <param name="origin" value="0.0"/>
+    <param name="probability_occupied" value="0.65"/>
   </node>
 
   <node pkg="tf" type="static_transform_publisher" name="landmark_laser_to_map" args="0 0 0 0 0 0 1 /map /landmark_frame 1000"/>
