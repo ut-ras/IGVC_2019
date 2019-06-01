@@ -35,4 +35,14 @@
   <!-- Show in Rviz   -->
   <!--node name="rviz" pkg="rviz" type="rviz"/-->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo)/rviz/lidar.rviz"/>
+
+  <!-- Use controller joystick input -->
+  <node name="joy_node" pkg="joy" type="joy_node">
+    <param name="input" value="/dev/input/js0"/>
+    <param name="autorepeat_rate" value="15.0"/>
+    <param name="deadzone" value="0.0"/>
+  </node>
+
+  <!-- Publish twist commands to /cmd_vel -->
+  <node name="joystick_input" pkg="gazebo" type="diff_drive.py"/>
 </launch>
