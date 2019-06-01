@@ -36,7 +36,7 @@ class ExtendedKalmanFilter:
 		self.DEBUG = False
 
 	def visualize_landmarks(self, landmarks):
-		num_readings = 1080
+		num_readings = 720
 		laser_frequency = 40
 		current_time = rospy.Time.now()
 
@@ -44,9 +44,9 @@ class ExtendedKalmanFilter:
 		
 		scan.header.stamp = current_time
 		scan.header.frame_id = 'landmark_frame'
-		scan.angle_min = -2.35619449019
-		scan.angle_max = 2.35619449019
-		scan.angle_increment =  0.0043633231
+		scan.angle_min = -1.570796
+		scan.angle_max = 1.570796
+		scan.angle_increment = (scan.angle_max - scan.angle_min) / num_readings
 		scan.time_increment = 0.000061722
 		scan.scan_time = 1.0
 		scan.range_min = 0.2
@@ -77,7 +77,7 @@ class ExtendedKalmanFilter:
 			else:
 				scan.ranges.append(0)
 
-		print len(scan.ranges)
+		#print len(scan.ranges)
 
 		landmark_pub.publish(scan)
 		#print bearing

@@ -44,8 +44,8 @@
       <surface>
         <friction>
           <ode>
-            <mu>0</mu>
-            <mu2>0</mu2>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
             <slip1>1.0</slip1>
             <slip2>1.0</slip2>
           </ode>
@@ -60,7 +60,7 @@
       </geometry>
     </visual>
 
-    <collision name='caster_front_collision'>
+    <!--collision name='caster_front_collision'>
       <origin xyz="0.15 0 -0.05" rpy=" 0 0 0"/>
       <geometry>
         <sphere radius="0.05"/>
@@ -82,7 +82,7 @@
       <geometry>
         <sphere radius="0.05"/>
       </geometry>
-    </visual>
+    </visual-->
 
   </link>
 
@@ -103,7 +103,7 @@
     </visual>
     <inertial>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
-      <mass value="5"/>
+      <mass value="25"/>
       <inertia
         ixx=".1" ixy="0.0" ixz="0.0"
         iyy=".1" iyz="0.0"
@@ -127,7 +127,7 @@
     </visual>
     <inertial>
       <origin xyz="0 0 0" rpy="0 1.5707 1.5707"/>
-      <mass value="5"/>
+      <mass value="25"/>
       <inertia
         ixx=".1" ixy="0.0" ixz="0.0"
         iyy=".1" iyz="0.0"
@@ -143,7 +143,8 @@
     <parent link="chassis"/>
     <axis xyz="0 1 0" rpy="0 0 0"/>
     <limit effort="10000" velocity="1000"/>
-    <joint_properties damping="1.0" friction="1.0"/>
+    <joint_properties damping="10.0" friction="0.0"/>
+    <!--joint_properties damping="1.0" friction="1.0"/-->
   </joint>
 
   <joint type="continuous" name="right_wheel_hinge">
@@ -153,7 +154,8 @@
     <parent link="chassis"/>
     <axis xyz="0 1 0" rpy="0 0 0"/>
     <limit effort="10000" velocity="1000"/>
-    <joint_properties damping="1.0" friction="1.0"/>
+    <joint_properties damping="10.0" friction="0.0"/>
+    <!--joint_properties damping="1.0" friction="1.0"/-->
   </joint>
 
 

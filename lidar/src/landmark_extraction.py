@@ -42,12 +42,15 @@ class LandmarkExtraction:
 		#print self.output_landmark
 
 		#print "start-------------------------------\n"
+
+		self.output_landmark = []
+		self.landmark_index = 0
 		
 		for angle in range(1, len(msg.ranges) - 1):
 			derivative = (msg.ranges[angle] - msg.ranges[angle-1]) / 2
 
 			# Check for infinity measurements
-			if (msg.ranges[angle] > 999999999):
+			if (msg.ranges[angle] > 999999999) or abs(derivative) > 999999999:
 				continue
 
 			if (derivative < -self.depth_jump):
@@ -71,13 +74,13 @@ class LandmarkExtraction:
 					landmark_x = landmark_range * cos(radians(landmark_bearing))
 					landmark_y = landmark_range * sin(radians(landmark_bearing))
 
-					if self.output_landmark == []:
+					if self.output_landmark == [] and landmark_range < 999999999:
 						new_landmark_found = True
 						self.landmark_index += 1
 					else:
 						# Loop through all existing landmarks
 						# If no correspondence is found, set new_landmark_found flag to true
-						for index in range(self.landmark_index + 1):
+						for index in range(self.landmark_index):
 							distance_x = landmark_x - self.output_landmark[index][0]
 							distance_y = landmark_y - self.output_landmark[index][1]
 
@@ -88,7 +91,7 @@ class LandmarkExtraction:
 								new_landmark_found = False
 								break
 
-							if (distance_to_landmark > max_landmark_radius):
+							if (distance_to_landmark > max_landmark_radius) and landmark_range < 999999999:
 								new_landmark_found = True
 
 						if new_landmark_found:
@@ -117,11 +120,11 @@ class LandmarkExtraction:
 	def main(self):
 		rospy.init_node('scan_listener', anonymous=True)
 		pub = rospy.Publisher("/landmark", Float64MultiArray, queue_size=10)
+		rospy.Subscriber("/hokuyo/laserscan", LaserScan, self.laserScanCb)
 
 		rate = rospy.Rate(10)
 
 		while not rospy.is_shutdown():
-			rospy.Subscriber("/scan", LaserScan, self.laserScanCb)
 			pub.publish(self.landmark_msg)
 			rate.sleep()
 
