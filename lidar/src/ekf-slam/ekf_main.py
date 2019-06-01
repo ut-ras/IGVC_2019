@@ -63,9 +63,9 @@ class ExtendedKalmanFilter:
 		for i in range(len(landmarks)):
 			current_range.append(sqrt(landmarks[i][0]**2 + landmarks[i][1]**2))
 			bearing.append(degrees(atan2(landmarks[i][1], landmarks[i][0])))
-			bearing[i] = round((bearing[i] + 135.0) * 4.0)
+			bearing[i] = round((bearing[i]) * 4.0)
 
-		for i in range(0, 1080):
+		for i in range(0, num_readings):
 			for j in range(len(bearing)):
 				if i == (bearing[j]):
 					scan.ranges.append(current_range[j])

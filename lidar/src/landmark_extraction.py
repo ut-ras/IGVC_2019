@@ -54,7 +54,7 @@ class LandmarkExtraction:
 				continue
 
 			if (derivative < -self.depth_jump):
-				bearing = angle * 0.25 - 135.0 
+				bearing = angle * 0.25
 				left_edge = bearing
 
 				#print "left_edge found at {}".format(left_edge)
@@ -62,14 +62,14 @@ class LandmarkExtraction:
 				left_edge_found = True
 
 			if (derivative > self.depth_jump):
-				bearing = angle * 0.25 - 135.0
+				bearing = angle * 0.25
 				right_edge = bearing
 				
 				#print "right_edge found at {}".format(right_edge)
 				
 				if left_edge_found:
 					landmark_bearing = (right_edge + left_edge) / 2 # <-- This right here is causing small errors by divid by 2. Will fix later
-					landmark_range = msg.ranges[int((landmark_bearing + 135.0) * 4.0)]
+					landmark_range = msg.ranges[int((landmark_bearing) * 4.0)]
 
 					landmark_x = landmark_range * cos(radians(landmark_bearing))
 					landmark_y = landmark_range * sin(radians(landmark_bearing))
