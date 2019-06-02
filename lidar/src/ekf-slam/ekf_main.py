@@ -3,7 +3,7 @@
 import rospy
 from math import sin, cos, pi, atan2, sqrt, radians, degrees
 from numpy import *
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float32MultiArray, Float64MultiArray
 from sensor_msgs.msg import LaserScan
 
 import ekf_prediction, ekf_correction
@@ -28,12 +28,13 @@ class ExtendedKalmanFilter:
 		self.measurement_angle_stddev = measurement_angle_stddev
 
 		self.observations = []
+		self.control, self.previous_time = [0,0], [0,0]
 
 		self.number_of_landmarks = 0
 		self.landmark_index = -1
 		self.loop_once = False
 
-		self.DEBUG = False
+		self.DEBUG = True
 
 	def visualize_landmarks(self, landmarks):
 		num_readings = 720
@@ -92,6 +93,13 @@ class ExtendedKalmanFilter:
 
 		#print self.observations[-1]
 
+	def encoderCallback(self, msg):
+		for i in range(len(msg.data)):
+			current = rospy.get_time()
+			time_elapsed = current - self.previous_time[i]
+			self.control[i] = msg.data[i] * time_elapsed
+			self.previous_time[i] = current
+
 	def predict(self, control):
 		# Testing
 		# Returns Predicted State and Predicted Covariance
@@ -117,10 +125,12 @@ class ExtendedKalmanFilter:
 
 		if self.DEBUG: 
 			print ""
+			print "Control: ", self.control
 			print "Predicted State: ", self.state 
 			print "State Dimensions: ", self.state.shape
 			print "Predicted Covariance: ", self.covariance
 			print "Covariance Dimensions: ", self.covariance.shape
+			print "Number of landmarks: ", self.number_of_landmarks
 			print ""
 
 	def add_landmark(self, landmark_coords):
@@ -229,15 +239,19 @@ if __name__ == '__main__':
 		landmark_pub = rospy.Publisher('scan_landmarks', LaserScan, queue_size=10)
 		scan_pub = rospy.Publisher('test_scan', LaserScan, queue_size=10)
 
+		# Subscribe to observations here
+		rospy.Subscriber("/landmark", Float64MultiArray, ekf.retrieve_landmarks, queue_size = 10)
+
+		# Subscribe to encoder data here
+		rospy.Subscriber('wheel_velocity', Float32MultiArray, ekf.encoderCallback, queue_size=10)
+
 		rate = rospy.Rate(10)
 
 		while not rospy.is_shutdown():
 			# Subscribe to encoder ticks here and initialize control array
-			#ekf.predict(control)
-			ekf.predict([10.0,12.0])
+			ekf.predict(ekf.control)
+			#ekf.predict([10.0,12.0])
 
-			# Subscribe to observations here
-			rospy.Subscriber("/landmark", Float64MultiArray, ekf.retrieve_landmarks, queue_size = 10)
 			#observations = [[1,2,3,2],[2,4,5,1]]
 
 			#observations = [[2,3,4,1],[2,3,4,1]]

@@ -36,7 +36,8 @@ def joy_cb(msg):
 
 def main():
 	global linear_vel, turn_vel
-	motor_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+	#motor_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+	motor_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 	rospy.Subscriber('joy', Joy, joy_cb)
 
 	twist = Twist()

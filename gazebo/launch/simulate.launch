@@ -7,6 +7,10 @@
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
+
+  <!-- Find model and rviz -->
+  <arg name="model" default="$(find gazebo)/urdf/skid_steer_bot.xacro"/>
+  <arg name="rvizconfig" default="$(find gazebo)/rviz/lidar.rviz"/>
   
   <!-- Launch Gazebo Simulator -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -19,22 +23,33 @@
   </include>
 
   <!-- Insert Robot Model -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find gazebo)/urdf/diff_bot.xacro'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)"/>
 
   <node name="mybot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
-   args="-urdf -param robot_description -model diff_bot" />
+   args="-z 1.0 -unpause -urdf -param robot_description -model Skid_Steer"/>
 
   <!-- send fake joint values -->
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+  <!--node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="use_gui" value="False"/>
-  </node>
+  </node-->
 
-  <!-- Combine joint values -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+  <!-- Load diff drive yaml file into param server -->
+  <rosparam file="$(find gazebo)/config/diff_drive.yaml" command="load"/>
+  <rosparam file="$(find gazebo)/config/joint_states.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <node name="robot_arm_controller_spawner" pkg="controller_manager" type="spawner"
+    respawn="true" output="screen"
+     args="joint_state_controller diff_drive_controller"/>
+
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+      respawn="false" output="screen">
+  </node>
 
   <!-- Show in Rviz   -->
   <!--node name="rviz" pkg="rviz" type="rviz"/-->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo)/rviz/lidar.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)"/>
 
   <!-- Use controller joystick input -->
   <node name="joy_node" pkg="joy" type="joy_node">
@@ -44,8 +59,12 @@
   </node>
 
   <!-- Publish twist commands to /cmd_vel -->
-  <node name="joystick_input" pkg="gazebo" type="diff_drive.py"/>
+  <node name="joystick_input" pkg="gazebo" type="diff_drive.py">
+    <remap from="/cmd_vel" to="/diff_drive_controller/cmd_vel"/>
+  </node>
 
   <!-- Publish encoder ticks from twist commands to /encoder_ticks -->
-  <node name="encoder_ticks" pkg="gazebo" type="twist_to_encoder_ticks.py" output="screen"/>
+  <node name="encoder_ticks" pkg="gazebo" type="twist_to_encoder_ticks.py" output="screen">
+    <remap from="/cmd_vel" to="/diff_drive_controller/cmd_vel"/>
+  </node>
 </launch>

@@ -135,28 +135,49 @@
     </inertial>
   </link>
 
-
   <joint type="continuous" name="left_wheel_hinge">
     <origin xyz=".07 0.15 0" rpy="0 0 0"/>
-    <!--origin xyz="0.1 0.13 0" rpy="0 1.5707 1.5707"/-->
     <child link="left_wheel"/>
     <parent link="chassis"/>
     <axis xyz="0 1 0" rpy="0 0 0"/>
     <limit effort="10000" velocity="1000"/>
-    <joint_properties damping="10.0" friction="0.0"/>
-    <!--joint_properties damping="1.0" friction="1.0"/-->
+    <joint_properties damping="1.0" friction="1.0"/>
+    <implicitSpringDamper>1</implicitSpringDamper>
   </joint>
 
   <joint type="continuous" name="right_wheel_hinge">
     <origin xyz=".07 -0.15 0" rpy="0 0 0"/>
-    <!--origin xyz="0.1 -0.13 0" rpy="0 1.5707 1.5707"/-->
     <child link="right_wheel"/>
     <parent link="chassis"/>
     <axis xyz="0 1 0" rpy="0 0 0"/>
     <limit effort="10000" velocity="1000"/>
-    <joint_properties damping="10.0" friction="0.0"/>
-    <!--joint_properties damping="1.0" friction="1.0"/-->
+    <joint_properties damping="1.0" friction="1.0"/>
+    <implicitSpringDamper>1</implicitSpringDamper>
   </joint>
+
+  <transmission name="left_wheel_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="left_wheel_hinge">
+      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </joint>
+    <actuator name="left_wheel_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </actuator>
+  </transmission>
+
+  <transmission name="right_wheel_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="right_wheel_hinge">
+      <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </joint>
+    <actuator name="right_wheel_motor">
+      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>VelocityJointInterface</hardwareInterface>
+    </actuator>
+  </transmission>
 
 
   <!--link name="camera">
@@ -221,6 +242,12 @@
     </inertial>
   </link>
 
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>true</legacyModeNS>
+    </plugin>
+  </gazebo>
 
 </robot>
 
