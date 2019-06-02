@@ -31,7 +31,9 @@ class TwistToMotors():
 	
 		self.w = rospy.get_param("~base_width", 0.2)
 	
-		self.pub_encoder_ticks = rospy.Publisher('encoder_ticks', Float32MultiArray, queue_size=10)
+		self.pub_wheel_velocity = rospy.Publisher('wheel_velocity', Float32MultiArray, queue_size=10)
+		self.pub_wheel_distance = rospy.Publisher('wheel_distance', Float32MultiArray, queue_size=10)
+
 		rospy.Subscriber('cmd_vel', Twist, self.twistCallback)
 	
 		self.rate = rospy.get_param("~rate", 50)
@@ -39,7 +41,8 @@ class TwistToMotors():
 		self.left = 0
 		self.right = 0
 
-		self.encoder_ticks = Float32MultiArray()
+		self.wheel_velocity, self.wheel_distance = Float32MultiArray(), Float32MultiArray()
+		self.distance, self.previous = [0,0], [0,0]
 
 	def spin(self):
 		r = rospy.Rate(self.rate)
@@ -61,9 +64,24 @@ class TwistToMotors():
 		self.left = 1.0 * self.dx - self.dr * self.w / 2
 		# rospy.loginfo("publishing: (%d, %d)", left, right) 
 
-		self.encoder_ticks.data = [self.left, self.right]
-		self.pub_encoder_ticks.publish(self.encoder_ticks)
+		self.wheel_velocity.data = [self.left, self.right]
+		self.pub_wheel_velocity.publish(self.wheel_velocity)
+
+		#print type(rospy.get_rostime())
+
+		current = rospy.get_time()
+		time_elapsed = current - self.previous[0]
+		self.distance[0] += self.left * time_elapsed
+		self.previous[0] = current
+
+		current = rospy.get_time()
+		time_elapsed = current - self.previous[1]
+		self.distance[1] += self.right * time_elapsed
+		self.previous[1] = current
 			
+		self.wheel_distance.data = self.distance
+		self.pub_wheel_distance.publish(self.wheel_distance)
+
 		self.ticks_since_target += 1
 
 	def twistCallback(self,msg):

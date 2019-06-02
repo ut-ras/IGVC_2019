@@ -47,5 +47,5 @@
   <node name="joystick_input" pkg="gazebo" type="diff_drive.py"/>
 
   <!-- Publish encoder ticks from twist commands to /encoder_ticks -->
-  <node name="encoder_ticks" pkg="gazebo" type="twist_to_encoder_ticks.py"/>
+  <node name="encoder_ticks" pkg="gazebo" type="twist_to_encoder_ticks.py" output="screen"/>
 </launch>
