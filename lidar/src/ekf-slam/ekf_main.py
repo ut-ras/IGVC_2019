@@ -28,7 +28,9 @@ class ExtendedKalmanFilter:
 		self.measurement_angle_stddev = measurement_angle_stddev
 
 		self.observations = []
-		self.control, self.previous_time = [0,0], [0,0]
+		self.control, self.previous_control = [0,0], [0,0] 
+		self.previous_time = 0
+		self.distance = [0,0]
 
 		self.number_of_landmarks = 0
 		self.landmark_index = -1
@@ -94,15 +96,20 @@ class ExtendedKalmanFilter:
 		#print self.observations[-1]
 
 	def encoderCallback(self, msg):
+		current = rospy.get_time()
+		time_elapsed = current - self.previous_time
+
 		for i in range(len(msg.data)):
-			current = rospy.get_time()
-			time_elapsed = current - self.previous_time[i]
 			self.control[i] = msg.data[i] * time_elapsed
-			self.previous_time[i] = current
+			self.distance[i] += self.control[i]
+
+		self.predict(self.control)
+		self.previous_time = current
 
 	def predict(self, control):
 		# Testing
 		# Returns Predicted State and Predicted Covariance
+		current_time = rospy.get_time()
 
 		G3 = ekf_prediction.dg_dstate(self.state, control, self.robot_width)
 		control_variance = ekf_prediction.sigma_control(control, self.control_motion_factor, self.control_turn_factor)
@@ -126,6 +133,8 @@ class ExtendedKalmanFilter:
 		if self.DEBUG: 
 			print ""
 			print "Control: ", self.control
+			print "Testing state estimate: ", self.distance
+			print "Predict time loop: ", rospy.get_time() - current_time
 			print "Predicted State: ", self.state 
 			print "State Dimensions: ", self.state.shape
 			print "Predicted Covariance: ", self.covariance
@@ -249,7 +258,7 @@ if __name__ == '__main__':
 
 		while not rospy.is_shutdown():
 			# Subscribe to encoder ticks here and initialize control array
-			ekf.predict(ekf.control)
+			#ekf.predict(ekf.control)
 			#ekf.predict([10.0,12.0])
 
 			#observations = [[1,2,3,2],[2,4,5,1]]

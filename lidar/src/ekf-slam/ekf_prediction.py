@@ -8,6 +8,7 @@ in the case of a differential wheeled robot
 
 import rospy
 from math import sin, cos, pi, atan2, sqrt
+from std_msgs.msg import Float32MultiArray
 from numpy import *
 
 # State function
@@ -94,8 +95,111 @@ def sigma_control(control, control_motion_factor, control_turn_factor):
 	return array([[left_control_variance, 0.0],
 				 [0.0, right_control_variance]])
 
+class EKFPredict():
+	def __init__(self, initial_state, initial_covariance, robot_width, 
+					control_motion_factor, control_turn_factor):
+		self.state = initial_state
+		self.covariance = initial_covariance
+		self.robot_width = robot_width
+		self.control_motion_factor = control_motion_factor
+		self.control_turn_factor = control_turn_factor
+
+		self.number_of_landmarks = 0
+		self.landmark_index = 0
+
+		self.DEBUG = True
+
+		self.control = [0,0]
+		self.distance = [0,0]
+		#self.previous_time = [0,0]
+		self.previous_time = 0
+
+	def encoderCallback(self, msg):
+		current = rospy.get_time()
+		time_elapsed = current - self.previous_time
+
+		for i in range(len(msg.data)):
+			self.control[i] = msg.data[i] * time_elapsed
+			self.distance[i] += self.control[i]
+
+		self.predict(self.control)
+		self.previous_time = current
+
+	def publish(self, pub):
+		state = Float32MultiArray()
+		state.data = self.state
+
+		pub.publish(state)
+
+	def predict(self, control):
+		# Testing
+		# Returns Predicted State and Predicted Covariance
+		current_time = rospy.get_time()
+
+		G3 = dg_dstate(self.state, self.control, self.robot_width)
+		control_variance = sigma_control(self.control, self.control_motion_factor, self.control_turn_factor)
+		V = dg_dcontrol(self.state, self.control, self.robot_width)
+		R3 = dot(V, dot(control_variance, V.T))
+
+		G_landmarks = eye(3+2*self.number_of_landmarks)
+		G_landmarks[0:3,0:3] = G3
+
+		R_landmarks = zeros([3+2*self.number_of_landmarks, 3+2*self.number_of_landmarks])
+		R_landmarks[0:3,0:3] = R3
+
+		g3 = g(self.state, control, self.robot_width)
+		
+		g_landmarks = zeros(3+2*self.number_of_landmarks)
+		g_landmarks[0:3] = g3
+
+		self.state = g_landmarks
+		self.covariance = dot(G_landmarks, dot(self.covariance, G_landmarks.T)) + R_landmarks
+
+		if self.DEBUG: 
+			print ""
+			print "Control: ", control
+			print "Testing state estimate: ", self.distance
+			#print "Predict time loop: ", rospy.get_time() - current_time
+			print "Predicted State: ", self.state 
+			#print "State Dimensions: ", self.state.shape
+			#print "Predicted Covariance: ", self.covariance
+			#print "Covariance Dimensions: ", self.covariance.shape
+			#print "Number of landmarks: ", self.number_of_landmarks
+			print ""
+
 if __name__ == '__main__':
 	try:
 		print("EKF Prediction is Alive!")
+
+		rospy.init_node("EKF_Prediction", anonymous=True)
+
+		# Initial Conditions
+		x_0 = rospy.get_param("/ekf/x0")
+		y_0 = rospy.get_param("/ekf/y0")
+		theta_0 = rospy.get_param("/ekf/theta0")
+
+		# EKF Filter Constants
+		robot_width = rospy.get_param("/ekf/robot_width")
+		control_motion_factor = rospy.get_param("/ekf/control_motion_factor")
+		control_turn_factor = rospy.get_param("/ekf/control_turn_factor")
+
+		# Initial State
+		initial_state = array([x_0, y_0, theta_0])
+
+		# Initial Covariance
+		initial_covariance = zeros([3,3])
+
+		ekf_predict = EKFPredict(initial_state, initial_covariance, robot_width,
+						   control_motion_factor, control_turn_factor)
+
+		# Subscribe to encoder data here
+		rospy.Subscriber('wheel_velocity', Float32MultiArray, ekf_predict.encoderCallback, queue_size=10)
+
+		# Set up predicted state estimate
+		predict_state_estimate_pub = rospy.Publisher('predicted_state', Float32MultiArray, queue_size=10)
+
+		while not rospy.is_shutdown():
+			#ekf_predict.predict()
+			ekf_predict.publish(predict_state_estimate_pub)
 	except rospy.ROSInterruptException:
 		pass
