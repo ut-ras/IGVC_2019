@@ -13,11 +13,12 @@ from math import sin, cos, radians, degrees, sqrt
 
 class LandmarkExtraction:
 	def __init__(self, minimum_valid_distance, depth_jump, 
-				 cylinder_offset, max_landmark_radius):
+				 cylinder_offset, max_landmark_radius, angle_offset):
 		self.depth_jump = depth_jump
 		self.cylinder_offset = cylinder_offset
 		self.max_landmark_radius = max_landmark_radius
 		self.minimum_valid_distance = minimum_valid_distance
+		self.angle_offset = angle_offset
 
 		self.landmark_msg = Float64MultiArray()
 		self.print_x_y = True
@@ -71,8 +72,8 @@ class LandmarkExtraction:
 					landmark_bearing = (right_edge + left_edge) / 2 # <-- This right here is causing small errors by divid by 2. Will fix later
 					landmark_range = msg.ranges[int((landmark_bearing) * 4.0)]
 
-					landmark_x = landmark_range * cos(radians(landmark_bearing))
-					landmark_y = landmark_range * sin(radians(landmark_bearing))
+					landmark_x = landmark_range * cos(radians(landmark_bearing - self.angle_offset))
+					landmark_y = landmark_range * sin(radians(landmark_bearing - self.angle_offset))
 
 					if self.output_landmark == [] and landmark_range < 999999999:
 						new_landmark_found = True
@@ -137,9 +138,10 @@ if __name__ == '__main__':
 		depth_jump = rospy.get_param("/landmark_extraction/depth_jump")
 		cylinder_offset = rospy.get_param("/landmark_extraction/cylinder_offset")
 		max_landmark_radius = rospy.get_param("/landmark_extraction/max_landmark_radius")
+		angle_offset = rospy.get_param("/landmark_extraction/angle_offset")
 
 		extractor = LandmarkExtraction(minimum_valid_distance, depth_jump,
-									   cylinder_offset, max_landmark_radius)
+									   cylinder_offset, max_landmark_radius, angle_offset)
 		extractor.main()
 
 	except rospy.ROSInterruptException:

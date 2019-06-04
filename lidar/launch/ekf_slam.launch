@@ -6,22 +6,24 @@
 
   <node name="landmark_extraction" pkg="lidar" type="landmark_extraction.py" output="screen">
   	<param name="minimum_valid_distance" value="10"/>
-  	<param name="depth_jump" value="0.001"/>
+  	<param name="depth_jump" value="0.01"/>
   	<param name="cylinder_offset" value="10"/>
   	<param name="max_landmark_radius" value="0.5"/>
+    <param name="angle_offset" value="90"/>
   </node>
 
   <node name="ekf" pkg="lidar" type="ekf_main.py" output="screen">
     <param name="ticks_to_mm" value="0.349"/>
   	<param name="robot_width" value="0.22"/>
-  	<param name="scanner_displacement" value="0.15"/>
+  	<param name="scanner_displacement" value="0.0"/>
   	<param name="control_motion_factor" value="0.3"/>
   	<param name="control_turn_factor" value="0.6"/>
-  	<param name="measurement_distance_stddev" value="600.0"/>
-  	<param name="measurement_angle_stddev" value="0.7854"/>
+  	<param name="measurement_distance_stddev" value="0.01"/>
+  	<param name="measurement_angle_stddev" value="0.01"/>
   	<param name="x0" value="0.0"/>
   	<param name="y0" value="0.0"/>
   	<param name="theta0" value="0.0"/>
+    <param name="angle_offset" value="90"/>
   </node>
 
   <!--node name="ekf_prediction" pkg="lidar" type="ekf_prediction.py" output="screen"/-->

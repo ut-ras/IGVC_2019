@@ -29,7 +29,11 @@ def h(state, landmark, scanner_displacement):
 	r = sqrt(q)
 	alpha = (atan2(dy, dx) - theta + pi) % (2 * pi) - pi
 
-	#rint ""
+	print "X: ", x_m, x_l
+	print "Y: ", y_m, y_l
+	print "Alpha: ", alpha
+
+	#print ""
 	#print "State: ", state
 	#print "Landmark: ", landmark
 	#print "Distance to Measurement: ", r

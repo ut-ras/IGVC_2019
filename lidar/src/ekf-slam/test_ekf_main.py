@@ -10,25 +10,24 @@ from numpy import *
 class EKF_MainTest(unittest.TestCase):
 	@classmethod
 	def setUpClass(self):
-		self.state = [100.0, 100.0, 0.0]
-		self.covariance = array([[1,2,3],
+		self.state = [100.0, 0.0, 0.0]
+		self.covariance = array([[1,0,0],
 								 [0,1,0],
 								 [0,0,1]])
 		self.width = 150.0
-		self.scannerDisplacement = 10.0
+		self.scannerDisplacement = 0.0
 		self.control_motion_factor = 0.35
 		self.control_turn_factor = 0.6
-		self.measurement_distance_stddev = 600.0
-		self.measurement_angle_stddev = 0.7854
+		self.measurement_distance_stddev = 0.0
+		self.measurement_angle_stddev = 0.0
 
 		self.equalControl = [10.0,10.0]
 		self.notEqualControl = [10.0, 15.0]
 
-		self.measurement = [200.0, 250.0]
+		self.landmark_coords = [200.0, 0.0]
+		self.measurement = [350.0, 0.0]
 		self.no_landmarks = -1
 		self.first_landmark = 0
-
-		self.landmark_coords = self.measurement
 
 	@staticmethod
 	def reinitialize_object(self):
@@ -37,6 +36,35 @@ class EKF_MainTest(unittest.TestCase):
 								   self.measurement_distance_stddev, self.measurement_angle_stddev)
 
 		return ekf
+
+	def test_assign_landmark(self):
+		ekf = EKF_MainTest.reinitialize_object(self)
+
+
+	def test_add_landmark(self):
+		ekf = EKF_MainTest.reinitialize_object(self)
+
+		test_state = array([100,100,0.0,200.0,250.0])
+		test_covariance = array([[1,2,3,0,0],
+								 [0,1,0,0,0],
+								 [0,0,1,0,0],
+								 [0,0,0,10**10,0],
+								 [0,0,0,0,10**10]])
+		test_landmark_index = 0
+
+		ekf.add_landmark(self.landmark_coords)
+
+		self.assertTrue(allclose(ekf.state, test_state),
+						'Updated State with Landmark did not equal test state:\n\nOutput:\n{}\n\nTest:\n{}\n'\
+						.format(ekf.state, test_state))
+
+		self.assertTrue(allclose(ekf.covariance, test_covariance),
+						'Updated Covariance with Landmark did not equal test covariance:\n\nOutput:\n{}\n\nTest:\n{}\n'\
+						.format(ekf.covariance, test_covariance))
+
+		self.assertTrue(allclose(ekf.landmark_index, test_landmark_index),
+						'Updated landmark index did not equal test landmark index:\n\nOutput:\n{}\n\nTest:\n{}\n'\
+						.format(ekf.landmark_index, test_landmark_index))
 
 	def test_predict(self):
 		ekf = EKF_MainTest.reinitialize_object(self)
@@ -72,31 +100,6 @@ class EKF_MainTest(unittest.TestCase):
 		self.assertTrue(allclose(ekf.covariance, test_covariance),
 						'Predicted Covariance (l!=r) did not equal test covariance:\n\nOutput:\n{}\n\nTest:\n{}\n'\
 						.format(ekf.covariance, test_covariance))
-
-	def test_add_landmark(self):
-		ekf = EKF_MainTest.reinitialize_object(self)
-
-		test_state = array([100,100,0.0,200.0,250.0])
-		test_covariance = array([[1,2,3,0,0],
-								 [0,1,0,0,0],
-								 [0,0,1,0,0],
-								 [0,0,0,10**10,0],
-								 [0,0,0,0,10**10]])
-		test_landmark_index = 0
-
-		ekf.add_landmark(self.landmark_coords)
-
-		self.assertTrue(allclose(ekf.state, test_state),
-						'Updated State with Landmark did not equal test state:\n\nOutput:\n{}\n\nTest:\n{}\n'\
-						.format(ekf.state, test_state))
-
-		self.assertTrue(allclose(ekf.covariance, test_covariance),
-						'Updated Covariance with Landmark did not equal test covariance:\n\nOutput:\n{}\n\nTest:\n{}\n'\
-						.format(ekf.covariance, test_covariance))
-
-		self.assertTrue(allclose(ekf.landmark_index, test_landmark_index),
-						'Updated landmark index did not equal test landmark index:\n\nOutput:\n{}\n\nTest:\n{}\n'\
-						.format(ekf.landmark_index, test_landmark_index))
 
 	def test_correct(self):
 		ekf = EKF_MainTest.reinitialize_object(self)

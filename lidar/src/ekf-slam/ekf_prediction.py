@@ -53,7 +53,7 @@ def dg_dstate(state, control, width):
 # Jacobian of State Function wrt Control
 def dg_dcontrol(state, control, width):
 	theta = state[2]
-	l, r = tuple(control)
+	l, r = control
 
 	if r != l:
 		rml = r - l
